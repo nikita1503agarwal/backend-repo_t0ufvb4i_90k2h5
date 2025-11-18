@@ -1,48 +1,46 @@
 """
-Database Schemas
+Database Schemas for the English-for-Kids app
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model represents a collection in your MongoDB database.
+Collection name is the lowercase of the class name.
 """
-
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 
-# Example schemas (replace with your own):
-
-class User(BaseModel):
+class Lesson(BaseModel):
     """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
+    Collection: "lesson"
+    Represents a lesson unit children can learn (e.g., Colors, Animals).
     """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    title: str = Field(..., description="Lesson title in Hebrew (for UI)")
+    english_title: Optional[str] = Field(None, description="Optional English title")
+    description: Optional[str] = Field(None, description="Short description in Hebrew")
+    level: str = Field("beginner", description="Level: beginner | intermediate | advanced")
+    cover_emoji: str = Field("📘", description="Emoji icon for the lesson card")
 
-class Product(BaseModel):
+class Word(BaseModel):
     """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
+    Collection: "word"
+    Vocabulary items mapped to a lesson.
     """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+    lesson_id: str = Field(..., description="ID of the lesson this word belongs to")
+    english: str = Field(..., description="English word")
+    hebrew: str = Field(..., description="Hebrew translation")
+    image_url: Optional[str] = Field(None, description="Optional image to illustrate the word")
+    example: Optional[str] = Field(None, description="Short example sentence in simple English")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class Progress(BaseModel):
+    """
+    Collection: "progress"
+    Tracks a user's correct answers and streaks per lesson.
+    """
+    user_id: str = Field(..., description="User identifier (e.g., 'guest' or UUID)")
+    lesson_id: str = Field(..., description="Related lesson id")
+    correct: int = Field(0, ge=0)
+    incorrect: int = Field(0, ge=0)
+    last_score: Optional[int] = Field(None, description="Last quiz score out of N")
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+# Optional: Example initial content (not used directly by API)
+class SeedData(BaseModel):
+    lessons: List[Lesson] = []
+    words: List[Word] = []
